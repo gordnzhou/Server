@@ -12,24 +12,27 @@
 1. clone website repo into `services/` and configure `docker-compose.yml`
 1. (optional) install node, npm to test website containerless
 
-
 ## Deploying to the Internet
 
-### Requirements:
-- A domain you own
+### Prereqs:
+- A domain from a domain registrar that routes to home router's public IP / your desired IP
 
 ### Steps
-1. add firewall rules
-1. enable port forwarding on router for ports 80 and 443 to this machine
-1. edit `nginx/nginx.conf` to route `/.well-known/acme-challenge` to `/var/www/certbot`
-and run script to request cert for your domain
-1. after recieving initial certificate, add server block for https to nginx config and reload nginx
-1. setup DDNS (NOTE: configuration is based on **domain registrar**)
+1. Add firewall rules
+1. On router, Enable port forwarding for ports 80 and 443 to the server machine
+    - Verify that ports are [open](https://www.yougetsignal.com/tools/open-ports/)
+    - **All** inbound requests from port 80 and 443 will route through Nginx first
+1. Edit `nginx/nginx.conf` to route `/.well-known/acme-challenge` to `/var/www/certbot` and run `request-cert.sh` to get initial TLS certificate
+    - If not working, test that `http://<DOMAIN-NAME>/.well-known/acme-challenge` returns a non-303 error.
+1. Now in `nginx/nginx.conf` add a block for **https** routing and reload configuration with `docker exec -it nginx nginx -s reload`. Future HTTPS certificate renewals will be handled by Certbot.
+    - Test using: `docker compose run --rm --entrypoint certbot certbot renew --dry-run`
+1. (Optional) If domain points to router, add local DNS record inside router's LAN for domain
+1. Setup DDNS (NOTE: configuration is based on **domain registrar**)
+    - See `ddns-updater/data` for configuring domain registered with Porkbun
+    - Go to `localhost:9000` to see DDNS status (if updater is on host port 9000)
 
 ## CI/CD Pipeline 
-Set up cron job to run automation script every minute:
-1. Automation Script: Go to folder, use lock file to run detect script, printing logs to a dedicated log file
-1. Detect Script: Automatically fetch any changes from website's GH repo. If any changes found, stash local changes, git pull and run deploy script.
-1. Deploy script: Scale website containers up to 2 during deployment downtime, then scale down to 1, then reload nginx
-     
+Create cron job to run `auto-deploy.sh` every minute. `auto-deploy.sh` runs `deploy-if-changed.sh` and prints to log file. `deploy-if-changed.sh` fetches for changes in git repo and updates containers if found.
 
+- NOTE: make sure to run `chmod +x <SCRIPT-PATH>` for all automated scripts
+- NOTE: Use git repo's SSH remote url instead of HTTPS remote

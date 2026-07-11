@@ -1,0 +1,12 @@
+{
+  "settings": [
+    {
+      "provider": "porkbun",
+      "domain": "gordonzhou.xyz",
+      "host": "@,www",
+      "api_key": "",
+      "secret_api_key": "",
+      "ip_version": "ipv4"
+    }
+  ]
+}
