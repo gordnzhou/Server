@@ -2,7 +2,7 @@
 
 LOG_PATH="/home/gordon/scripts/auto-deploy.log"
 DEPLOY_SCRIPT_PATH="/home/gordon/scripts/deploy-if-changed.sh"
-export DOCKER_CONTEXT=gordon
+# export DOCKER_CONTEXT=gordon
 
 MAX_LINES=10240
 if [ -f "$LOG_PATH" ]; then

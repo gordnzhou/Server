@@ -32,9 +32,11 @@ deploy_website() {
     log "Reloading Nginx..."
     NGINX_CONTAINER=$(docker ps -aqf "name=nginx")
     docker exec $NGINX_CONTAINER nginx -s reload
+    
+    log "Website version $BUILD_VERSION successfully deployed."
 }
 
-log "Fetching remote repo..."
+# log "Fetching remote repo..."
 git fetch
 
 UPSTREAM=${1:-'@{u}'}
@@ -43,7 +45,8 @@ REMOTE=$(git rev-parse "$UPSTREAM")
 BASE=$(git merge-base @ "$UPSTREAM")
 
 if [ $LOCAL = $REMOTE ]; then
-    log "No git changes detected"
+    # log "No git changes detected"
+    :
 elif [ $LOCAL = $BASE ]; then 
     log "Changes detected, running redeploy..."
     deploy_website
@@ -54,3 +57,8 @@ elif [ $REMOTE = $BASE ]; then
 else
     log "your git HEAD and upstream have diverged!"
 fi
+
+# for when HTTPS cert is renewed
+# log "Reloading Nginx config..."
+NGINX_CONTAINER=$(docker ps -aqf "name=nginx")
+docker exec "$NGINX_CONTAINER" nginx -s reload &>/dev/null
